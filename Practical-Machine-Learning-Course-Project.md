@@ -16,7 +16,8 @@ The quantified self movement has gained traction in recent years, allowing indiv
 
 ## Data Loading and Exploration
 
-```{r Data Loading and Exploration, message=FALSE, warning=FALSE}
+
+``` r
 # Download training and testing data files 
 url_training <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 download.file(url_training, destfile = "pml-training.csv")
@@ -27,11 +28,11 @@ download.file(url_testing, destfile = "pml-testing.csv")
 # Load training and testing data
 train_data <- read.csv("pml-training.csv")
 test_data <- read.csv("pml-testing.csv")
-
 ```
 
 
-```{r Data Overview}
+
+``` r
 # Data Overview
 library(kableExtra)
 
@@ -47,8 +48,29 @@ rownames(data_overview) <- c("Training", "Testing")
 data_overview %>%
   kbl() %>%
   kable_classic(full_width = FALSE)
-
 ```
+
+<table class=" lightable-classic" style='color: black; font-family: "Arial Narrow", "Source Sans Pro", sans-serif; width: auto !important; margin-left: auto; margin-right: auto;'>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> observations </th>
+   <th style="text-align:right;"> variables </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Training </td>
+   <td style="text-align:right;"> 19622 </td>
+   <td style="text-align:right;"> 160 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Testing </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 160 </td>
+  </tr>
+</tbody>
+</table>
 
 The training dataset consists of 19,622 observations and 160 variables, while the testing dataset contains 20 observations.
 
@@ -57,7 +79,8 @@ The training dataset consists of 19,622 observations and 160 variables, while th
 
 We clean the data by handling missing values and removing irrelevant columns.
 
-```{r Data Cleaning and Preprocessing}
+
+``` r
 library(kableExtra)
 
 # Remove irrelevant columns and columns with missing values
@@ -77,10 +100,33 @@ rownames(data_overview) <- c("Training", "Testing")
 data_overview %>%
   kbl() %>%
   kable_classic(full_width = FALSE)
+```
 
+<table class=" lightable-classic" style='color: black; font-family: "Arial Narrow", "Source Sans Pro", sans-serif; width: auto !important; margin-left: auto; margin-right: auto;'>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:right;"> observations </th>
+   <th style="text-align:right;"> variables </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Training </td>
+   <td style="text-align:right;"> 19622 </td>
+   <td style="text-align:right;"> 53 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Testing </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 53 </td>
+  </tr>
+</tbody>
+</table>
+
+``` r
 # Convert 'classe' to a factor
 train_data$classe <- factor(train_data$classe)
-
 ```
 
 The training and test data each now contains 53 variables.
@@ -90,7 +136,8 @@ The training and test data each now contains 53 variables.
 
 We will use a Random Forest model for this prediction task, a robust classifier that works well with high-dimensional data.
 
-```{r model-building, message=FALSE, warning=FALSE}
+
+``` r
 library(parallel)
 library(doParallel)
 library(caret)
@@ -122,10 +169,32 @@ saveRDS(rf_model_cv, "rf_model_cv.rds")
 
 # Print the cross-validation results
 print(rf_model_cv)
+```
 
+```
+## Random Forest 
+## 
+## 19622 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (7 fold) 
+## Summary of sample sizes: 16819, 16820, 16818, 16821, 16819, 16817, ... 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa    
+##    2    0.9954134  0.9941982
+##   27    0.9948528  0.9934889
+##   52    0.9897569  0.9870428
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was mtry = 2.
+```
+
+``` r
 # Stop the parallel processing cluster
 stopCluster(cl)
-
 ```
 
 
@@ -133,14 +202,52 @@ stopCluster(cl)
 
 Next, we'll evaluate the model using cross-validation accuracy and a confusion matrix.
 
-```{r model-evaluation, message=FALSE, warning=FALSE}
+
+``` r
 library(caret)
 library(ggplot2)
 
 # Confusion matrix for the Random Forest model on the training set
 rf_predictions_train <- predict(rf_model_cv, train_data)
 confusionMatrix(rf_predictions_train, train_data$classe)
+```
 
+```
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 5580    0    0    0    0
+##          B    0 3797    0    0    0
+##          C    0    0 3422    0    0
+##          D    0    0    0 3216    0
+##          E    0    0    0    0 3607
+## 
+## Overall Statistics
+##                                      
+##                Accuracy : 1          
+##                  95% CI : (0.9998, 1)
+##     No Information Rate : 0.2844     
+##     P-Value [Acc > NIR] : < 2.2e-16  
+##                                      
+##                   Kappa : 1          
+##                                      
+##  Mcnemar's Test P-Value : NA         
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Specificity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Pos Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Neg Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Prevalence             0.2844   0.1935   0.1744   0.1639   0.1838
+## Detection Rate         0.2844   0.1935   0.1744   0.1639   0.1838
+## Detection Prevalence   0.2844   0.1935   0.1744   0.1639   0.1838
+## Balanced Accuracy      1.0000   1.0000   1.0000   1.0000   1.0000
+```
+
+``` r
 # Plot the feature importance
 importance <- varImp(rf_model_cv, scale = FALSE)
 
@@ -150,22 +257,28 @@ ggplot(importance, aes(x = reorder(Var1, Overall), y = Overall)) +
   theme_minimal() +
   coord_flip() +  # Flip the axes
   labs(title = "Feature Importance", x = "Features", y = "Importance")
-
 ```
+
+![](Practical-Machine-Learning-Course-Project_files/figure-html/model-evaluation-1.png)<!-- -->
 
  
 ### Predictions on Test Data
 
 After training and evaluating the model, we'll use it to make predictions on the test data.
 
-```{r predictions}
+
+``` r
 library(caret)
 # Make predictions on the test set using the trained model
 rf_predictions_test <- predict(rf_model_cv, test_data)
 
 # Print the test set predictions
 print(rf_predictions_test)
+```
 
+```
+##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E
 ```
 
 
@@ -173,7 +286,8 @@ print(rf_predictions_test)
 
 We can visualize the model performance using a confusion matrix.
 
-```{r confusion-matrix, fig.height=5, fig.width=7}
+
+``` r
 library(caret)
 library(ggplot2)
 
@@ -182,7 +296,44 @@ rf_conf_matrix <- confusionMatrix(rf_predictions_train, train_data$classe)
 
 # Print the confusion matrix
 rf_conf_matrix
+```
 
+```
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 5580    0    0    0    0
+##          B    0 3797    0    0    0
+##          C    0    0 3422    0    0
+##          D    0    0    0 3216    0
+##          E    0    0    0    0 3607
+## 
+## Overall Statistics
+##                                      
+##                Accuracy : 1          
+##                  95% CI : (0.9998, 1)
+##     No Information Rate : 0.2844     
+##     P-Value [Acc > NIR] : < 2.2e-16  
+##                                      
+##                   Kappa : 1          
+##                                      
+##  Mcnemar's Test P-Value : NA         
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Specificity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Pos Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Neg Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Prevalence             0.2844   0.1935   0.1744   0.1639   0.1838
+## Detection Rate         0.2844   0.1935   0.1744   0.1639   0.1838
+## Detection Prevalence   0.2844   0.1935   0.1744   0.1639   0.1838
+## Balanced Accuracy      1.0000   1.0000   1.0000   1.0000   1.0000
+```
+
+``` r
 # Plot the confusion matrix
 conf_matrix_df <- as.data.frame(rf_conf_matrix$table)
 ggplot(conf_matrix_df, aes(x = Prediction, y = Reference, fill = Freq)) +
@@ -192,8 +343,9 @@ ggplot(conf_matrix_df, aes(x = Prediction, y = Reference, fill = Freq)) +
   theme_minimal() +
   labs(title = "Confusion Matrix", x = "Predicted", y = "Actual") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 ```
+
+![](Practical-Machine-Learning-Course-Project_files/figure-html/confusion-matrix-1.png)<!-- -->
 
 
 ### Conclusion
